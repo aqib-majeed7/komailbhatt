@@ -4,7 +4,8 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
-import logoSrc from "@/app/gallery/photo.jpg";
+
+const logoSrc = "/photo.jpg";
 
 interface LogoProps {
   size?: "sm" | "md" | "lg" | "xl";
@@ -90,7 +91,7 @@ export default function Logo({ size = "md", showText = true, href = "/", classNa
           alt="Kumailbhatt Art Logo"
           width={s.img}
           height={s.img}
-          className="object-contain w-full h-full"
+          className="object-cover w-full h-full"
           style={{
             borderRadius: size === "xl" ? 24 : 12,
             filter: "drop-shadow(0 4px 20px rgba(201,169,110,0.4))",

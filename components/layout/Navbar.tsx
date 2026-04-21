@@ -136,13 +136,16 @@ export default function Navbar() {
                   {link.label}
                 </Link>
               ))}
-              <Link
-                href="/gallery"
-                onClick={() => setMobileOpen(false)}
-                className="btn-gold text-sm mt-2 justify-center"
-              >
-                View Gallery
-              </Link>
+              <div className="mt-2 flex justify-center">
+                <Link
+                  href="/gallery"
+                  onClick={() => setMobileOpen(false)}
+                  className="btn-gold text-xs py-2 px-5"
+                  style={{ width: "fit-content" }}
+                >
+                  View Gallery
+                </Link>
+              </div>
             </div>
           </motion.div>
         )}
