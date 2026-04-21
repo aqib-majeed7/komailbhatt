@@ -265,6 +265,7 @@ function SketchTable({ sketches, onEdit, onDelete }: { sketches: Sketch[]; onEdi
       </div>
 
       {sketches.map((sketch, i) => {
+        const urls = sketch.image_urls ?? [];
         const idx = previewIdx[sketch.id] ?? 0;
         return (
           <motion.div
@@ -278,34 +279,34 @@ function SketchTable({ sketches, onEdit, onDelete }: { sketches: Sketch[]; onEdi
             <div className="col-span-5 flex items-center gap-3">
               {/* Mini carousel thumbnail */}
               <div className="relative w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 group">
-                {sketch.image_urls[idx] && (
-                  <Image src={sketch.image_urls[idx]} alt={sketch.title} fill className="object-cover" sizes="56px" />
+                {urls[idx] && (
+                  <Image src={urls[idx]} alt={sketch.title} fill className="object-cover" sizes="56px" />
                 )}
-                {sketch.image_urls.length > 1 && (
+                {urls.length > 1 && (
                   <div className="absolute inset-0 flex items-center justify-between px-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => setPreviewIdx((p) => ({ ...p, [sketch.id]: idx === 0 ? sketch.image_urls.length - 1 : idx - 1 }))}
+                    <button onClick={() => setPreviewIdx((p) => ({ ...p, [sketch.id]: idx === 0 ? urls.length - 1 : idx - 1 }))}
                       className="w-5 h-5 rounded-full flex items-center justify-center" style={{ background: "rgba(0,0,0,0.6)" }}>
                       <ChevronLeft size={10} color="white" />
                     </button>
-                    <button onClick={() => setPreviewIdx((p) => ({ ...p, [sketch.id]: idx === sketch.image_urls.length - 1 ? 0 : idx + 1 }))}
+                    <button onClick={() => setPreviewIdx((p) => ({ ...p, [sketch.id]: idx === urls.length - 1 ? 0 : idx + 1 }))}
                       className="w-5 h-5 rounded-full flex items-center justify-center" style={{ background: "rgba(0,0,0,0.6)" }}>
                       <ChevronRight size={10} color="white" />
                     </button>
                   </div>
                 )}
-                {sketch.image_urls.length > 1 && (
+                {urls.length > 1 && (
                   <div className="absolute bottom-0.5 right-0.5 px-1 rounded text-white" style={{ fontSize: 8, background: "rgba(0,0,0,0.6)" }}>
-                    {idx + 1}/{sketch.image_urls.length}
+                    {idx + 1}/{urls.length}
                   </div>
                 )}
               </div>
               <div className="min-w-0">
                 <p className="font-medium text-sm truncate" style={{ color: "var(--text-primary)" }}>{sketch.title}</p>
-                <p className="text-xs truncate" style={{ color: "var(--text-muted)" }}>{sketch.description.slice(0, 45)}...</p>
+                <p className="text-xs truncate" style={{ color: "var(--text-muted)" }}>{(sketch.description || "").slice(0, 45)}...</p>
               </div>
             </div>
             <div className="col-span-2">
-              <span className="font-semibold text-sm text-gold">₹{sketch.price.toLocaleString("en-IN")}</span>
+              <span className="font-semibold text-sm text-gold">₹{(sketch.price || 0).toLocaleString("en-IN")}</span>
             </div>
             <div className="col-span-2">
               {sketch.featured
@@ -327,6 +328,7 @@ function SketchTable({ sketches, onEdit, onDelete }: { sketches: Sketch[]; onEdi
     </div>
   );
 }
+
 
 // ─── Sketch Form with Supabase Storage Upload ────────────────────────────────
 function SketchForm({ sketch, onSubmit, onCancel }: { sketch: Sketch | null; onSubmit: (data: SketchInput) => void; onCancel: () => void; }) {
