@@ -1,0 +1,20 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "regions": ["sin1"],
+  "env": {
+    "NEXT_PUBLIC_SUPABASE_URL": "@supabase_url",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@supabase_anon_key",
+    "SUPABASE_SERVICE_ROLE_KEY": "@supabase_service_role_key",
+    "NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME": "@cloudinary_cloud_name",
+    "CLOUDINARY_API_KEY": "@cloudinary_api_key",
+    "CLOUDINARY_API_SECRET": "@cloudinary_api_secret",
+    "NEXT_PUBLIC_WHATSAPP_NUMBER": "@whatsapp_number",
+    "NEXT_PUBLIC_INSTAGRAM_HANDLE": "@instagram_handle",
+    "NEXT_PUBLIC_EMAIL": "@artist_email",
+    "NEXT_PUBLIC_YOUTUBE_CHANNEL": "@youtube_channel",
+    "NEXT_PUBLIC_ARTIST_NAME": "@artist_name"
+  }
+}
