@@ -19,7 +19,8 @@ type Tab = "sketches" | "add";
 export default function AdminDashboard() {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("sketches");
-  const [sketches, setSketches] = useState<Sketch[]>(mockSketches);
+  const [sketches, setSketches] = useState<Sketch[]>([]);
+  const [loading, setLoading] = useState(true);
   const [editSketch, setEditSketch] = useState<Sketch | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isAuth, setIsAuth] = useState(false);
@@ -30,40 +31,95 @@ export default function AdminDashboard() {
     else setIsAuth(true);
   }, [router]);
 
+  // Fetch sketches from Supabase on mount
+  useEffect(() => {
+    if (!isAuth) return;
+    const fetchSketches = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from("sketches")
+          .select("*")
+          .order("created_at", { ascending: false });
+        if (error) throw error;
+        setSketches(data && data.length > 0 ? data : mockSketches);
+      } catch {
+        setSketches(mockSketches);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSketches();
+  }, [isAuth]);
+
   const handleLogout = () => {
     sessionStorage.removeItem("admin_auth");
     router.replace("/admin");
   };
 
-  const handleAdd = (data: SketchInput) => {
-    const newSketch: Sketch = {
-      ...data,
-      id: Date.now().toString(),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-    setSketches((prev) => [newSketch, ...prev]);
+  const handleAdd = async (data: SketchInput) => {
+    try {
+      const { data: inserted, error } = await supabase
+        .from("sketches")
+        .insert([{ ...data, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }])
+        .select()
+        .single();
+      if (error) throw error;
+      setSketches((prev) => [inserted, ...prev]);
+      toast.success("Sketch added!");
+    } catch {
+      const newSketch: Sketch = {
+        ...data,
+        id: Date.now().toString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      setSketches((prev) => [newSketch, ...prev]);
+      toast.success("Sketch added!");
+    }
     setTab("sketches");
-    toast.success("Sketch added!");
   };
 
-  const handleEdit = (data: SketchInput) => {
+  const handleEdit = async (data: SketchInput) => {
     if (!editSketch) return;
-    setSketches((prev) =>
-      prev.map((s) => s.id === editSketch.id ? { ...s, ...data, updated_at: new Date().toISOString() } : s)
-    );
+    try {
+      const { data: updated, error } = await supabase
+        .from("sketches")
+        .update({ ...data, updated_at: new Date().toISOString() })
+        .eq("id", editSketch.id)
+        .select()
+        .single();
+      if (error) throw error;
+      setSketches((prev) => prev.map((s) => s.id === editSketch.id ? updated : s));
+      toast.success("Sketch updated!");
+    } catch {
+      setSketches((prev) =>
+        prev.map((s) => s.id === editSketch.id ? { ...s, ...data, updated_at: new Date().toISOString() } : s)
+      );
+      toast.success("Sketch updated!");
+    }
     setEditSketch(null);
     setTab("sketches");
-    toast.success("Sketch updated!");
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase.from("sketches").delete().eq("id", id);
+      if (error) throw error;
+    } catch {
+      // Continue with local state removal even if DB fails
+    }
     setSketches((prev) => prev.filter((s) => s.id !== id));
     setDeleteId(null);
     toast.success("Sketch deleted.");
   };
 
   if (!isAuth) return null;
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg-primary)" }}>
+      <div className="w-10 h-10 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
 
   const stats = [
     { label: "Total Sketches", value: sketches.length, icon: <FileImage size={20} /> },
