@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
-import logoSrc from "@/app/gallery/logo.png";
+import logoSrc from "@/app/gallery/photo.jpg";
 
 interface LogoProps {
   size?: "sm" | "md" | "lg" | "xl";
