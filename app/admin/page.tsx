@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("admin@gmail.com");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -20,28 +20,20 @@ export default function AdminLoginPage() {
     setLoading(true);
 
     try {
-      // Simple hardcoded admin check for demo (replace with Supabase Auth in production)
-      if (email === "admin@gmail.com" && password === "admin123") {
-        // Try Supabase auth first
-        try {
-          const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
-          if (authError) {
-            // If Supabase not configured, use session storage fallback
-            sessionStorage.setItem("admin_auth", "true");
-          }
-        } catch {
-          sessionStorage.setItem("admin_auth", "true");
-        }
-        router.push("/admin/dashboard");
+      const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+      if (authError) {
+        setError("Invalid email or password.");
       } else {
-        setError("Invalid credentials. Use admin@gmail.com / admin123");
+        sessionStorage.setItem("admin_auth", "true");
+        router.push("/admin/dashboard");
       }
     } catch {
-      setError("Login failed. Please try again.");
+      setError("Invalid email or password.");
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <div
@@ -121,7 +113,7 @@ export default function AdminLoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="input-glass pl-11"
-                  placeholder="admin@gmail.com"
+                  placeholder="Enter your email"
                   required
                 />
               </div>
