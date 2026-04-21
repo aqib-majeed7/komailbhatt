@@ -1,16 +1,30 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Eye } from "lucide-react";
 import { Sketch } from "@/lib/types";
-import { mockSketches } from "@/lib/mockData";
+import { supabase } from "@/lib/supabase";
 
-const featured = mockSketches.filter((s) => s.featured).slice(0, 6);
+export default function FeaturedGallery() {
+  const [items, setItems] = useState<Sketch[]>([]);
 
-export default function FeaturedGallery({ sketches }: { sketches?: Sketch[] }) {
-  const items = sketches || featured;
+  useEffect(() => {
+    const fetchFeatured = async () => {
+      const { data, error } = await supabase
+        .from("sketches")
+        .select("*")
+        .eq("featured", true)
+        .order("created_at", { ascending: false })
+        .limit(6);
+      if (!error && data) setItems(data);
+    };
+    fetchFeatured();
+  }, []);
+
+  if (items.length === 0) return null;
 
   return (
     <section className="section-padding" style={{ background: "var(--bg-primary)" }}>
@@ -76,6 +90,8 @@ export default function FeaturedGallery({ sketches }: { sketches?: Sketch[] }) {
 }
 
 function SketchCard({ sketch }: { sketch: Sketch }) {
+  const coverImage = (sketch.image_urls ?? [])[0];
+
   return (
     <Link href={`/sketch/${sketch.id}`}>
       <motion.div
@@ -87,15 +103,17 @@ function SketchCard({ sketch }: { sketch: Sketch }) {
       >
         {/* Image */}
         <div className="relative w-full overflow-hidden" style={{ height: 260 }}>
-          <Image
-            src={sketch.image_urls[0]}
-            alt={sketch.title}
-            fill
-            className="object-cover transition-transform duration-700 group-hover:scale-110"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          />
+          {coverImage && (
+            <Image
+              src={coverImage}
+              alt={sketch.title}
+              fill
+              className="object-cover transition-transform duration-700 group-hover:scale-110"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            />
+          )}
 
-          {/* Gradient overlay — always visible on mobile, hover on desktop */}
+          {/* Gradient overlay */}
           <div
             className="absolute inset-0 transition-opacity duration-300"
             style={{
@@ -104,9 +122,9 @@ function SketchCard({ sketch }: { sketch: Sketch }) {
             }}
           />
 
-          {/* Price + eye icon — always visible on mobile */}
+          {/* Price + eye icon */}
           <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
-            <div className="price-tag text-sm">₹{sketch.price.toLocaleString("en-IN")}</div>
+            <div className="price-tag text-sm">₹{(sketch.price || 0).toLocaleString("en-IN")}</div>
             <motion.div
               className="w-9 h-9 rounded-xl flex items-center justify-center"
               style={{ background: "rgba(255,255,255,0.15)", color: "white" }}
@@ -137,7 +155,7 @@ function SketchCard({ sketch }: { sketch: Sketch }) {
           </p>
           <div className="flex items-center justify-between mt-3">
             <span className="font-bold text-gold text-base md:text-lg">
-              ₹{sketch.price.toLocaleString("en-IN")}
+              ₹{(sketch.price || 0).toLocaleString("en-IN")}
             </span>
             <motion.span
               className="text-xs flex items-center gap-1"

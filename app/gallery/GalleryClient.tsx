@@ -1,19 +1,31 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { Search, ArrowRight, Eye } from "lucide-react";
 import { Sketch } from "@/lib/types";
+import { supabase } from "@/lib/supabase";
 
 type SortOption = "newest" | "price-asc" | "price-desc";
 
-export default function GalleryPageClient({ sketches }: { sketches?: Sketch[] }) {
-  const allSketches = sketches || [];
+export default function GalleryPageClient({ sketches: initialSketches }: { sketches?: Sketch[] }) {
+  const [allSketches, setAllSketches] = useState<Sketch[]>(initialSketches || []);
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<SortOption>("newest");
-  const [showFilters, setShowFilters] = useState(false);
+
+  useEffect(() => {
+    if (initialSketches && initialSketches.length > 0) return; // use passed data if available
+    const fetchSketches = async () => {
+      const { data, error } = await supabase
+        .from("sketches")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (!error && data) setAllSketches(data);
+    };
+    fetchSketches();
+  }, [initialSketches]);
 
   const filtered = useMemo(() => {
     let result = allSketches.filter(
