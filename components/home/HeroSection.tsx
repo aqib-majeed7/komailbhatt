@@ -3,8 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, Sparkles } from "lucide-react";
-import Logo from "@/components/ui/Logo";
+import photoSrc from "@/app/gallery/photo.jpg";
 
 export default function HeroSection() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -183,7 +184,18 @@ export default function HeroSection() {
             animate={{ y: [0, -10, 0] }}
             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
           >
-            <Logo size={isMobile ? "lg" : "xl"} showText={false} href="" className="cursor-default" />
+            <Image
+              src={photoSrc}
+              alt="Kumailbhatt Art Studio"
+              width={isMobile ? 72 : 120}
+              height={isMobile ? 72 : 120}
+              className="object-cover cursor-default"
+              style={{
+                borderRadius: isMobile ? 12 : 24,
+                filter: "drop-shadow(0 4px 20px rgba(201,169,110,0.4))",
+              }}
+              priority
+            />
           </motion.div>
         </motion.div>
 
