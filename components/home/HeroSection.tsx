@@ -5,7 +5,7 @@ import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, Sparkles } from "lucide-react";
-import photoSrc from "@/app/gallery/photo.jpg";
+const photoSrc = "/photo.jpg";
 
 export default function HeroSection() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
