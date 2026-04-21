@@ -4,14 +4,13 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { Search, SlidersHorizontal, ArrowRight, Eye } from "lucide-react";
+import { Search, ArrowRight, Eye } from "lucide-react";
 import { Sketch } from "@/lib/types";
-import { mockSketches } from "@/lib/mockData";
 
 type SortOption = "newest" | "price-asc" | "price-desc";
 
 export default function GalleryPageClient({ sketches }: { sketches?: Sketch[] }) {
-  const allSketches = sketches || mockSketches;
+  const allSketches = sketches || [];
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<SortOption>("newest");
   const [showFilters, setShowFilters] = useState(false);
@@ -158,13 +157,15 @@ function GalleryCard({ sketch }: { sketch: Sketch }) {
       <div className="sketch-card group">
         {/* Image */}
         <div className="relative w-full overflow-hidden" style={{ height: 260 }}>
-          <Image
-            src={sketch.image_urls[0]}
-            alt={sketch.title}
-            fill
-            className="object-cover transition-transform duration-700 group-hover:scale-110"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-          />
+          {(sketch.image_urls ?? [])[0] && (
+            <Image
+              src={(sketch.image_urls ?? [])[0]}
+              alt={sketch.title}
+              fill
+              className="object-cover transition-transform duration-700 group-hover:scale-110"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            />
+          )}
           <div className="sketch-card-overlay" />
           <div className="sketch-card-actions">
             <div className="flex items-center justify-between">

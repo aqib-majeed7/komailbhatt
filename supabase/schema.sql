@@ -1,25 +1,32 @@
 -- ============================================================
 -- SUPABASE DATABASE SCHEMA FOR KUMAILBHATT ART
--- Run this in your Supabase SQL Editor
+-- Run this in: Supabase Dashboard → SQL Editor → New Query
 -- ============================================================
 
+-- ============================================================
+-- EXTENSIONS
+-- ============================================================
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- ============================================================
--- SKETCHES TABLE (with multi-image support)
+-- SKETCHES TABLE
 -- ============================================================
-CREATE TABLE IF NOT EXISTS sketches (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  title TEXT NOT NULL,
-  description TEXT DEFAULT '',
-  price DECIMAL(10,2) NOT NULL CHECK (price > 0),
-  image_urls TEXT[] NOT NULL DEFAULT '{}',   -- up to 3 image URLs
-  featured BOOLEAN DEFAULT false,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+DROP TABLE IF EXISTS sketches CASCADE;
+
+CREATE TABLE sketches (
+  id            UUID          DEFAULT gen_random_uuid() PRIMARY KEY,
+  title         TEXT          NOT NULL,
+  description   TEXT          NOT NULL DEFAULT '',
+  price         DECIMAL(10,2) NOT NULL CHECK (price > 0),
+  image_urls    TEXT[]        NOT NULL DEFAULT '{}',   -- up to 3 Supabase Storage URLs
+  featured      BOOLEAN       NOT NULL DEFAULT false,
+  created_at    TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+  updated_at    TIMESTAMPTZ   NOT NULL DEFAULT NOW()
 );
 
--- Auto-update trigger
+-- ============================================================
+-- AUTO-UPDATE updated_at ON EVERY UPDATE
+-- ============================================================
 CREATE OR REPLACE FUNCTION update_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -28,66 +35,60 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS sketches_updated_at ON sketches;
 CREATE TRIGGER sketches_updated_at
   BEFORE UPDATE ON sketches
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 -- ============================================================
--- ROW LEVEL SECURITY
+-- ROW LEVEL SECURITY (RLS)
 -- ============================================================
 ALTER TABLE sketches ENABLE ROW LEVEL SECURITY;
 
+-- Anyone can read sketches (gallery, homepage)
 CREATE POLICY "Public can read sketches"
-  ON sketches FOR SELECT USING (true);
+  ON sketches FOR SELECT
+  USING (true);
 
-CREATE POLICY "Authenticated users can insert"
-  ON sketches FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+-- Only service_role (admin dashboard) can insert/update/delete
+-- The admin uses SUPABASE_SERVICE_ROLE_KEY which bypasses RLS
+-- So these policies are a safety net for direct DB access
+CREATE POLICY "Service role can insert"
+  ON sketches FOR INSERT
+  WITH CHECK (true);
 
-CREATE POLICY "Authenticated users can update"
-  ON sketches FOR UPDATE USING (auth.role() = 'authenticated');
+CREATE POLICY "Service role can update"
+  ON sketches FOR UPDATE
+  USING (true);
 
-CREATE POLICY "Authenticated users can delete"
-  ON sketches FOR DELETE USING (auth.role() = 'authenticated');
+CREATE POLICY "Service role can delete"
+  ON sketches FOR DELETE
+  USING (true);
 
 -- ============================================================
--- STORAGE BUCKET FOR SKETCH IMAGES
+-- STORAGE BUCKET: sketch-images
 -- ============================================================
--- Run this in Supabase Dashboard → Storage → New Bucket:
--- Name: sketch-images
--- Public: YES (toggle on)
+-- Step 1: Go to Supabase Dashboard → Storage → New Bucket
+--   Name:   sketch-images
+--   Public: YES (toggle ON)
+--
+-- Step 2: Run these storage policies:
 
--- Then add these storage policies in SQL editor:
-
--- Allow public read of all images
+-- Allow anyone to view/download images
 CREATE POLICY "Public read sketch images"
   ON storage.objects FOR SELECT
   USING (bucket_id = 'sketch-images');
 
--- Allow authenticated users to upload images
-CREATE POLICY "Authenticated upload sketch images"
+-- Allow inserts (uploads) — service_role bypasses this
+CREATE POLICY "Allow image uploads"
   ON storage.objects FOR INSERT
-  WITH CHECK (bucket_id = 'sketch-images' AND auth.role() = 'authenticated');
+  WITH CHECK (bucket_id = 'sketch-images');
 
--- Allow authenticated users to delete images
-CREATE POLICY "Authenticated delete sketch images"
+-- Allow deletes — service_role bypasses this
+CREATE POLICY "Allow image deletes"
   ON storage.objects FOR DELETE
-  USING (bucket_id = 'sketch-images' AND auth.role() = 'authenticated');
+  USING (bucket_id = 'sketch-images');
 
 -- ============================================================
--- SEED DATA
+-- NO SEED DATA — All sketches are managed via admin dashboard
 -- ============================================================
-INSERT INTO sketches (title, description, price, image_urls, featured) VALUES
-  (
-    'Portrait in Shadows',
-    'A deeply expressive charcoal portrait capturing the interplay of light and shadow.',
-    2500,
-    ARRAY['https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&h=800&fit=crop'],
-    true
-  ),
-  (
-    'City in Lines',
-    'An architectural ink sketch of a vibrant cityscape drawn with meticulous detail.',
-    1800,
-    ARRAY['https://images.unsplash.com/photo-1515405295579-ba7b45403062?w=600&h=800&fit=crop'],
-    true
-  );
