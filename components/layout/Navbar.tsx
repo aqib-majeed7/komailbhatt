@@ -84,7 +84,11 @@ export default function Navbar() {
                 {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
               </button>
 
-              <Link href="/gallery" className="hidden md:flex btn-gold text-sm py-2.5 px-5">
+              <Link
+                href="/gallery"
+                className="hidden md:inline-flex btn-gold"
+                style={{ fontSize: 13, padding: "7px 18px", fontWeight: 600 }}
+              >
                 View Gallery
               </Link>
 
@@ -136,12 +140,15 @@ export default function Navbar() {
                   {link.label}
                 </Link>
               ))}
-              <div className="mt-2 flex justify-center">
+              <div
+                className="mt-3 pt-3 flex justify-center"
+                style={{ borderTop: "1px solid var(--glass-border)" }}
+              >
                 <Link
                   href="/gallery"
                   onClick={() => setMobileOpen(false)}
-                  className="btn-gold text-xs py-2 px-5"
-                  style={{ width: "fit-content" }}
+                  className="btn-gold"
+                  style={{ fontSize: 12, padding: "6px 20px", fontWeight: 600 }}
                 >
                   View Gallery
                 </Link>

@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
 
-const logoSrc = "/photo.jpg";
+const logoSrc = "/logo.png";
 
 interface LogoProps {
   size?: "sm" | "md" | "lg" | "xl";

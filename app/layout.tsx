@@ -12,6 +12,10 @@ export const metadata: Metadata = {
   description:
     "Discover and collect unique hand-drawn sketches by Kumailbhatt. Original artwork crafted with passion — turning imagination into art. Browse the gallery and connect directly via WhatsApp or Instagram.",
   keywords: ["kumailbhatt", "hand drawn sketches", "original artwork", "artist portfolio", "buy art", "sketch gallery", "art by kumail"],
+  icons: {
+    icon: "/photo.jpg",
+    apple: "/photo.jpg",
+  },
   openGraph: {
     title: "Kumailbhatt Art – Hand-Drawn Sketches",
     description: "Turning Imagination into Art. Browse unique hand-drawn sketches by Kumailbhatt.",
