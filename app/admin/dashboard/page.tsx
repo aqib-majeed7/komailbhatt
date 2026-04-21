@@ -345,7 +345,6 @@ function SketchForm({ sketch, onSubmit, onCancel }: { sketch: Sketch | null; onS
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
 
-    // Limit to 3 images total
     const remaining = 3 - imageUrls.length;
     const toUpload = files.slice(0, remaining);
 
@@ -355,51 +354,45 @@ function SketchForm({ sketch, onSubmit, onCancel }: { sketch: Sketch | null; onS
     }
 
     setUploading(true);
-    const newProgress = Array(toUpload.length).fill(0);
-    setUploadProgress(newProgress);
+    setUploadProgress(Array(toUpload.length).fill(0));
 
     const uploaded: string[] = [];
 
     for (let i = 0; i < toUpload.length; i++) {
       const file = toUpload[i];
-      const ext = file.name.split(".").pop();
-      const fileName = `sketch-${Date.now()}-${i}.${ext}`;
+      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const fileName = `sketch-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext}`;
 
       try {
-        // Try Supabase Storage
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-        if (supabaseUrl && !supabaseUrl.includes("your_")) {
-          const { data, error } = await supabase.storage
-            .from("sketch-images")
-            .upload(`sketches/${fileName}`, file, { contentType: file.type, upsert: false });
+        const { data, error } = await supabase.storage
+          .from("sketch-images")
+          .upload(`sketches/${fileName}`, file, {
+            contentType: file.type,
+            upsert: false,
+          });
 
-          if (error) throw error;
+        if (error) throw new Error(error.message);
 
-          const { data: { publicUrl } } = supabase.storage
-            .from("sketch-images")
-            .getPublicUrl(data.path);
+        const { data: { publicUrl } } = supabase.storage
+          .from("sketch-images")
+          .getPublicUrl(data.path);
 
-          uploaded.push(publicUrl);
-        } else {
-          // Fallback: create local object URL for preview (dev mode)
-          const objectUrl = URL.createObjectURL(file);
-          uploaded.push(objectUrl);
-          toast("Using local preview — connect Supabase Storage for permanent uploads", { icon: "ℹ️" });
-        }
-
+        uploaded.push(publicUrl);
         setUploadProgress((prev) => prev.map((p, idx) => (idx === i ? 100 : p)));
       } catch (err: any) {
-        toast.error(`Failed to upload ${file.name}: ${err.message}`);
-        // Fallback to local preview
-        uploaded.push(URL.createObjectURL(file));
+        toast.error(`Upload failed: ${err.message}. Make sure the "sketch-images" bucket exists and is public in Supabase Storage.`);
+        // Do NOT push a blob URL — skip this file
       }
     }
 
-    setImageUrls((prev) => [...prev, ...uploaded].slice(0, 3));
+    if (uploaded.length > 0) {
+      setImageUrls((prev) => [...prev, ...uploaded].slice(0, 3));
+    }
     setUploading(false);
     setUploadProgress([]);
     if (fileRef.current) fileRef.current.value = "";
   };
+
 
   const removeImage = (idx: number) => {
     setImageUrls((prev) => prev.filter((_, i) => i !== idx));
