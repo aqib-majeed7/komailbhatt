@@ -6,7 +6,7 @@ import { FaInstagram } from "react-icons/fa";
 import Image from "next/image";
 import Link from "next/link";
 import { Sketch } from "@/lib/types";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import toast from "react-hot-toast";
 
 const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "916006530058";
@@ -25,16 +25,30 @@ export default function SketchDetailClient({ sketch }: { sketch: Sketch }) {
   const [copied, setCopied] = useState(false);
   const [imgIndex, setImgIndex] = useState(0);
   const [direction, setDirection] = useState<Direction>(1);
+  const [paused, setPaused] = useState(false);
 
   const images = sketch.image_urls?.length ? sketch.image_urls : [];
   const hasMultiple = images.length > 1;
 
-  const goTo = (newIdx: number) => {
+  const goTo = useCallback((newIdx: number) => {
     setDirection(newIdx > imgIndex ? 1 : -1);
     setImgIndex(newIdx);
-  };
-  const prev = () => goTo(imgIndex === 0 ? images.length - 1 : imgIndex - 1);
-  const next = () => goTo(imgIndex === images.length - 1 ? 0 : imgIndex + 1);
+  }, [imgIndex]);
+
+  const prev = useCallback(() => goTo(imgIndex === 0 ? images.length - 1 : imgIndex - 1), [goTo, imgIndex, images.length]);
+  const next = useCallback(() => goTo(imgIndex === images.length - 1 ? 0 : imgIndex + 1), [goTo, imgIndex, images.length]);
+
+  // Auto-swipe every 3 seconds
+  useEffect(() => {
+    if (!hasMultiple || paused) return;
+    const timer = setInterval(() => {
+      setDirection(1);
+      setImgIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [hasMultiple, paused, images.length]);
+
+
 
   const whatsappMsg = encodeURIComponent(
     `Hi! I am interested in the sketch "${sketch.title}" (₹${sketch.price.toLocaleString("en-IN")}). Could you please share more details?`
@@ -88,6 +102,8 @@ export default function SketchDetailClient({ sketch }: { sketch: Sketch }) {
                 border: "1px solid var(--glass-border)",
                 boxShadow: "0 32px 80px rgba(0,0,0,0.35), 0 0 40px rgba(201,169,110,0.05)",
               }}
+              onMouseEnter={() => setPaused(true)}
+              onMouseLeave={() => setPaused(false)}
             >
               <AnimatePresence initial={false} custom={direction} mode="popLayout">
                 <motion.div

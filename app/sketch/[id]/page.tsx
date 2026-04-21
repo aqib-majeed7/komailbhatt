@@ -1,16 +1,31 @@
-import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import SketchDetailClient from "./SketchDetailClient";
-import { mockSketches } from "@/lib/mockData";
+import { createServerSupabase } from "@/lib/supabase";
 
 interface Props {
   params: { id: string };
 }
 
+async function getSketch(id: string) {
+  try {
+    const supabase = createServerSupabase();
+    const { data, error } = await supabase
+      .from("sketches")
+      .select("*")
+      .eq("id", id)
+      .single();
+    if (error) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const sketch = mockSketches.find((s) => s.id === params.id);
+  const sketch = await getSketch(params.id);
   if (!sketch) return { title: "Sketch Not Found" };
 
   return {
@@ -19,13 +34,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title: sketch.title,
       description: sketch.description,
-      images: sketch.image_urls,
+      images: sketch.image_urls ?? [],
     },
   };
 }
 
-export default function SketchPage({ params }: Props) {
-  const sketch = mockSketches.find((s) => s.id === params.id);
+export default async function SketchPage({ params }: Props) {
+  const sketch = await getSketch(params.id);
   if (!sketch) notFound();
 
   return (
@@ -39,6 +54,5 @@ export default function SketchPage({ params }: Props) {
   );
 }
 
-export function generateStaticParams() {
-  return mockSketches.map((s) => ({ id: s.id }));
-}
+// Don't pre-generate static pages — fetch dynamically from Supabase
+export const dynamic = "force-dynamic";
